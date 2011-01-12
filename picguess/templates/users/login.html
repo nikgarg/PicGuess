@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="text-align:center;">
+  Sign in to your
+  <br>
+  <img src="/site_media/img/picguess.png"> account
+  <br>
+
+  <form method="post" action=".">
+    <table style="margin-left:auto; margin-right:auto;">
+      <tr>
+	<td>{{ form.username.label_tag }}</td>
+	<td>{{ form.username }}</td>
+      </tr>
+      <tr>
+	<td>{{ form.password.label_tag }}</td>
+	<td>{{ form.password }}</td>
+      </tr>
+      {% if form.errors %}
+      <tr>
+	<td></td>
+	<td><font color="red">Incorrect username or password.</font></td>
+      </tr>
+      {% endif %}
+      <tr>
+	<td></td>
+	<td><input type="submit" value="login" /></td>
+      </tr>
+    </table>
+  </form>
+
+  <br><br>
+  New to PicGuess?
+  <br>
+  <a href="/users/register">Create an account</a>
+</div>
+
+{% endblock content %}

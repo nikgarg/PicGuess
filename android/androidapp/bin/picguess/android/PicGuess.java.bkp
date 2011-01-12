@@ -1,0 +1,1010 @@
+package picguess.android;
+
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.BufferedHttpEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+
+public class PicGuess extends Activity implements OnClickListener{
+	
+	private Context mycontext = null;
+
+	
+	public static class State implements Parcelable{
+
+		int choice_selected = -1;
+		int already_played = 0;
+		int photos_shown = 0;
+		int correctly_answered = 0;
+		int score = 0;
+		int is_logged_in = 0;
+		String stored_username = "";
+		String stored_password = "";
+		String play_log = "";
+		int len_play_log = 0;
+		JSONObject current_challenge = null;
+		List<JSONObject> stored_challenges = Collections.synchronizedList(new ArrayList<JSONObject>());
+		List<String> played_challenges = Collections.synchronizedList(new ArrayList<String>());
+		
+		public int describeContents() {
+			return 0;
+		}
+
+		public void writeToParcel(Parcel dest, int flags) {
+			//Log.v("MyMessages", "Writing Parcel");
+	         dest.writeInt(choice_selected);
+	         dest.writeInt(already_played);
+	         dest.writeInt(photos_shown);
+	         dest.writeInt(correctly_answered);
+	         dest.writeInt(score);
+	         dest.writeInt(is_logged_in);
+	         dest.writeString(stored_username);
+	         dest.writeString(stored_password);
+	         dest.writeString(play_log);
+	         dest.writeInt(len_play_log);
+	         synchronized (played_challenges)
+	         {
+	        	 dest.writeInt(played_challenges.size());
+	             Iterator<String> i = played_challenges.iterator();
+	             while (i.hasNext())
+	            	 dest.writeString(i.next());
+	         }	         
+	         if (current_challenge!=null)
+	        	 dest.writeString(current_challenge.toString());
+	         else
+	        	 dest.writeString("");
+	         synchronized (stored_challenges)
+	         {
+	        	 dest.writeInt(stored_challenges.size());
+	        	 Iterator<JSONObject> i = stored_challenges.iterator();
+	        	 while (i.hasNext())
+	        		 dest.writeString((i.next().toString()));
+	         }
+		}
+		
+	    public static final Parcelable.Creator<State> CREATOR
+            = new Parcelable.Creator<State>() {
+            public State createFromParcel(Parcel in) {
+            return new State(in);
+            }
+
+            public State[] newArray(int size) {
+                return new State[size];
+            }
+        };
+ 
+        private State(Parcel in) {
+    		//Log.v("MyMessages", "Reading Parcel");
+            choice_selected = in.readInt();
+            already_played = in.readInt();
+            photos_shown = in.readInt();
+            correctly_answered = in.readInt();
+            score = in.readInt();
+            is_logged_in = in.readInt();
+            stored_username = in.readString();
+            stored_password = in.readString();
+            play_log = in.readString();
+            len_play_log = in.readInt();
+            
+            int l = in.readInt();
+            for (int i=0;i<l;i++)
+            	played_challenges.add(new String(in.readString()));
+            
+            try {
+            	String s = in.readString();
+            	if (!s.equals(""))
+            		current_challenge = new JSONObject(s);
+            	
+            	int l2 = in.readInt();
+				for(int i=0;i<l2;i++)
+					stored_challenges.add(new JSONObject(in.readString()));
+				
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+        }
+
+        public State()
+        {
+        }
+	}
+	
+	Button[] choice_button = new Button[4];
+	Button submit_button;
+	ImageButton login_button;
+	ImageButton exit_button;
+	ImageButton score_sync_button;
+	Button broken_image_button;
+	TextView score_overall_view, score_session_view;
+	TextView copyright_view;
+	TextView username_view;
+	State state = new State();
+	Thread downloadThread = new DownloadThread();
+	int download_status = 1; //1=working, 0=problem
+	String download_error_message = "";
+	boolean stopDownloadThread = false;
+	boolean sync_in_progress = false;
+	int sync_nfailures = 0;
+	
+	public class DownloadThread extends Thread
+	{
+		public void run()
+		{
+			Log.v("MyMessages", "DownloadThread started");
+			int nfailures = 0;
+			HttpClient httpclient = new DefaultHttpClient();
+			
+			//remove old files if any
+	        String[] FL = mycontext.fileList();
+	        HashSet<String> SC = new HashSet<String>();
+			try 
+			{
+		         synchronized (state.stored_challenges)
+		         {
+		           Iterator<JSONObject> i = state.stored_challenges.iterator();
+		           while (i.hasNext())
+		             SC.add(i.next().getString("photo_id")+".dat");
+		         }
+				//for (int i=0;i<state.stored_challenges.size();i++)
+					//SC.add(state.stored_challenges.get(i).getString("photo_id")+".dat");
+		        if (state.current_challenge!=null)
+		        	SC.add(state.current_challenge.getString("photo_id")+".dat");
+			}
+			catch (JSONException e) {
+					e.printStackTrace();
+				}
+			HashSet<String> SF = new HashSet<String>();
+    		for(int i=0;i<FL.length;i++)
+    			SF.add(FL[i]);
+    		HashSet<String> SD = new HashSet<String>(SF);
+    		SD.removeAll(SC);
+    		Iterator<String> it = SD.iterator();
+    		while (it.hasNext())
+    		{
+    			mycontext.deleteFile(it.next());
+    		}
+    		
+    		int didwork = 0;
+    		
+			while(!stopDownloadThread)
+			{
+		        if (state.stored_challenges.size()<2)
+		        {
+		        	didwork = 1;
+		            String response = "";  //response for the http request
+		            try 
+		            {
+		                URL url = new URL(getString(R.string.url_base)+getString(R.string.url_challenge));
+		                BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+		                String line;
+		                while ((line = in.readLine()) != null)
+		                	response += line + '\n';
+		                //Log.v("MyMessages",response);
+		                in.close();
+		                
+		                JSONObject json = new JSONObject(response);
+		                int success = json.getInt("success");
+		                if (success==0)
+		                {
+		                	download_error_message = json.getString("message");
+		                	break;
+		                }
+			            JSONArray C = json.getJSONArray("challenges");
+			            for(int i=0; i<C.length(); i++)
+			            {
+			            	JSONObject challenge = C.getJSONObject(i);
+			            	String image_url = challenge.getString("photo_url");
+			            	HttpGet httpget = new HttpGet(image_url);
+			            	//Log.v("MyMessages", "Loading image: "+image_url);
+			            	HttpResponse response1 = httpclient.execute(httpget);
+			            	if (response1.getStatusLine().getStatusCode()!=HttpStatus.SC_OK)
+			            		continue;
+			            	HttpEntity entity = response1.getEntity();
+			            	BufferedHttpEntity bufentity = new BufferedHttpEntity(entity);
+			            	InputStream inStream = bufentity.getContent();        
+			            	//Log.v("MyMessages", "HTTP Status="+response1.getStatusLine().getStatusCode());
+			            	FileOutputStream fos = mycontext.openFileOutput(challenge.getString("photo_id")+".dat", MODE_PRIVATE);
+			            	byte buf[]=new byte[1024];
+			            	int len;
+			            	while((len=inStream.read(buf))>0)
+			            		fos.write(buf,0,len);
+			            	fos.close();            
+			            	inStream.close();
+			            	entity.consumeContent();
+			            	state.stored_challenges.add(challenge);
+			            }
+		                
+		            } catch (MalformedURLException e) {
+		            	nfailures += 1;
+		                e.printStackTrace();
+		                if(nfailures>=3)
+		                {
+		                	download_error_message = "Unable to contact the server";
+		                	break;
+		                }
+		            } catch (IOException e) {
+		            	nfailures += 1;
+		                e.printStackTrace();
+		                if(nfailures>=3)
+		                {
+		                	download_error_message = "Unable to contact the server";
+		                	break;
+		                }
+		            } catch (JSONException e) {
+		            	nfailures += 1;
+						e.printStackTrace();
+						if(nfailures>=3)
+						{
+		                	download_error_message = "Unable to contact the server";
+		                	break;
+						}
+					}
+		        }
+
+				if(state.played_challenges.size()>2 || state.len_play_log>2)
+				{
+					didwork = 1;
+					sync_score(0);
+				}
+				
+				if (didwork==1)
+				{
+					didwork = 0;
+			        try {
+						sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			download_status = 0;
+			Log.v("MyMessage", "DownloadThread ends: " + stopDownloadThread + ", " + nfailures);
+		}
+	}
+	
+	public void onSaveInstanceState(Bundle savedInstanceState) {
+		//Log.v("MyMessages", "Saving State");
+		savedInstanceState.putParcelable("state", state);
+		super.onSaveInstanceState(savedInstanceState);
+	}
+	/*
+	public void onRestoreInstanceState(Bundle savedInstanceState) {
+		Log.v("MyMessages", "Restoring State");
+		super.onRestoreInstanceState(savedInstanceState);
+		state = savedInstanceState.getParcelable("state");
+	}
+	*/
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.v("MyMessages", "Activity onCreate()");
+        setContentView(R.layout.main);        
+        mycontext = this.getBaseContext();
+        
+        choice_button[0] = (Button)findViewById(R.id.choice1);
+        choice_button[1] = (Button)findViewById(R.id.choice2);
+        choice_button[2] = (Button)findViewById(R.id.choice3);
+        choice_button[3] = (Button)findViewById(R.id.choice4);
+    	submit_button = (Button)findViewById(R.id.submit);
+    	login_button = (ImageButton)findViewById(R.id.login);
+    	broken_image_button = (Button)findViewById(R.id.broken_image);
+    	exit_button = (ImageButton)findViewById(R.id.exit);
+    	score_sync_button = (ImageButton)findViewById(R.id.score_sync);
+    	score_overall_view = (TextView)findViewById(R.id.score_overall);
+    	score_session_view = (TextView)findViewById(R.id.score_session);
+    	username_view = (TextView)findViewById(R.id.username);
+    	copyright_view = (TextView)findViewById(R.id.copyright);
+    	
+        for (int i=0;i<4;i++)
+        	choice_button[i].setOnClickListener(this);
+        submit_button.setOnClickListener(this);
+        broken_image_button.setOnClickListener(this);
+        login_button.setOnClickListener(buttonListener);
+        exit_button.setOnClickListener(buttonListener);       
+        score_sync_button.setOnClickListener(buttonListener);
+
+        int loaded = 0;
+        if (savedInstanceState!=null)
+        {
+        	state = savedInstanceState.getParcelable("state");
+            if(state.current_challenge!=null)	
+        	{
+            	loaded = loadChallenge(state.current_challenge);
+            	if (loaded==0)
+            	{
+            		try {
+						mycontext.deleteFile(state.current_challenge.getString("photo_id")+".dat");
+					} catch (JSONException e) {
+						e.printStackTrace();
+					}
+            		loaded = loadNewChallenge();
+            	}
+        	}
+            else
+            	loaded = loadNewChallenge();
+        }
+        else
+        {
+        	//Log.v("MyMessages", "saved instance state=null");
+            SharedPreferences settings = mycontext.getSharedPreferences("auth", 0);
+            state.stored_username = settings.getString("username", "");
+            state.stored_password = settings.getString("password", "");
+            state.is_logged_in = settings.getInt("is_logged_in", 0);
+            state.score = settings.getInt("score", 0);
+        	loaded = loadNewChallenge();
+        }
+
+        set_buttons();
+        set_userinfo();
+        if (loaded==0)
+        {
+        	if(download_status==0 && !download_error_message.equals(""))
+        	{
+        		set_message("Error!");
+        		show_alert(download_error_message);
+        	}
+        	else
+        		set_message("Unable to contact the server.");
+        	submit_button.setVisibility(4);
+	        ImageView imView = (ImageView)findViewById(R.id.challenge_image);
+	        imView.setImageResource(R.drawable.picguess);
+        }
+    }
+    
+    
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.options_menu, menu);
+        return true;
+    }
+    
+    public boolean onPrepareOptionsMenu(Menu menu)
+    {
+    	MenuItem menu_login = menu.findItem(R.id.menu_login);
+    	MenuItem menu_logout = menu.findItem(R.id.menu_logout);
+    	MenuItem menu_signup = menu.findItem(R.id.menu_signup);
+    	MenuItem menu_settings = menu.findItem(R.id.menu_settings);
+    	if (state.is_logged_in==1)
+    	{
+    		menu_settings.setEnabled(true);
+    		menu_settings.setVisible(true);
+    		menu_login.setEnabled(false);
+    		menu_login.setVisible(false);
+    		menu_signup.setEnabled(false);
+    		menu_signup.setVisible(false);
+    		menu_logout.setEnabled(true);
+    		menu_logout.setVisible(true);
+    	}
+    	else
+    	{
+    		menu_settings.setEnabled(false);
+    		menu_settings.setVisible(false);
+    		menu_login.setEnabled(true);
+    		menu_login.setVisible(true);
+    		menu_signup.setEnabled(true);
+    		menu_signup.setVisible(true);
+    		menu_logout.setEnabled(false);
+    		menu_logout.setVisible(false);
+    	}
+    	return true;
+    }
+    
+     
+    protected void onStop()
+    {
+    	super.onStop();
+    	Log.v("MyMessages", "onStop()...before: stopDownloadThread="+stopDownloadThread);
+    	stopDownloadThread = true;
+    	Log.v("MyMessages", "onStop()...after: stopDownloadThread="+stopDownloadThread);
+    	while(downloadThread.isAlive())
+    	{
+//	        try {
+//				sleep(1000);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+    	}
+    	
+       SharedPreferences settings = mycontext.getSharedPreferences("auth", 0);
+       SharedPreferences.Editor editor = settings.edit();
+       editor.putString("username", state.stored_username);
+       editor.putString("password", state.stored_password);
+       editor.putInt("is_logged_in", state.is_logged_in);
+       editor.putInt("score", state.score);
+       editor.commit();
+     }
+    
+    public int set_message(String msg)
+    {
+    	copyright_view.setText(msg);
+    	return 1;
+    }
+    
+    public int show_alert(String msg)
+    {
+       	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+    	builder.setMessage(msg);
+    	builder.setPositiveButton("Close", new DialogInterface.OnClickListener() {
+	           public void onClick(DialogInterface dialog, int id) {
+                dialog.cancel();
+           }
+        });
+    	AlertDialog alert = builder.create();
+    	alert.show();
+    	return 1;
+    }
+    
+    public int set_userinfo()
+    {
+    	if (state.is_logged_in==1)
+    	{
+    		username_view.setText(state.stored_username);	
+			login_button.setImageResource(R.drawable.logout);
+    	    score_overall_view.setText("Overall Score: " + state.score);
+    	    score_session_view.setText("This Session: " + state.correctly_answered + "/" + state.photos_shown);
+    	    if (!(state.played_challenges.isEmpty() && state.len_play_log==0))
+    	    	score_sync_button.setVisibility(0);
+    	    else
+    	    	score_sync_button.setVisibility(4);
+    	}
+    	else
+    	{
+    		username_view.setText("");
+    		login_button.setImageResource(R.drawable.login);
+    		score_overall_view.setText("Overall Score: Requires Login");
+    		score_session_view.setText("This Session: " + state.correctly_answered + "/" + state.photos_shown);
+    		score_sync_button.setVisibility(4);
+    	}
+    	return 1;
+    }
+    
+    public int set_buttons()
+    {
+    	int i;
+    	
+        for (i=0;i<4;i++)
+        {
+        	choice_button[i].setEnabled(false);
+        	choice_button[i].setBackgroundColor(0x00000000);
+        	choice_button[i].setText("");
+        }
+        submit_button.setEnabled(false);
+		submit_button.setTextColor(0xffffffff);
+		submit_button.setText("");
+		broken_image_button.setEnabled(false);
+		broken_image_button.setVisibility(4);
+		
+    	if(state.current_challenge!=null)
+    	{
+    		try
+    		{
+    		    JSONArray choices = state.current_challenge.getJSONArray("options");
+        	    for(i=0;i<4;i++)
+        		    choice_button[i].setText(choices.getString(i));
+    		
+        	    if (state.already_played==1)
+        	    {
+    				choice_button[state.choice_selected].setBackgroundColor(0xaaff0000);
+    				choice_button[state.current_challenge.getInt("correct_option")].setBackgroundColor(0xaa00ff00);
+    				submit_button.setText("Next");
+    	    		submit_button.setTextColor(0xff228b22);
+    				submit_button.setEnabled(true);
+        	    }
+        	    else
+        	    {
+        	    	for(i=0;i<4;i++)
+        	    		choice_button[i].setEnabled(true);
+        	    	submit_button.setText("Go");
+        			if (state.choice_selected!=-1)
+        			{
+        				choice_button[state.choice_selected].setBackgroundColor(0xaa0000ff);
+        				submit_button.setTextColor(0xff228b22);
+        				submit_button.setEnabled(true);
+        			}
+        			broken_image_button.setEnabled(true);
+        			broken_image_button.setVisibility(0);
+        	    }
+    		}
+    		catch (JSONException e)
+    		{
+    			e.printStackTrace();
+    			return 0;
+    		}
+    	}
+        
+    	return 1;
+    }
+    
+    
+    public void onClick(View v)
+    {
+    	switch(v.getId())
+    	{
+    		case R.id.choice1:
+    			state.choice_selected = 0;
+    			break;
+    			
+    		case R.id.choice2:
+    			state.choice_selected = 1;
+    			break;
+    			
+    		case R.id.choice3:
+    			state.choice_selected = 2;
+    			break;
+    			
+    		case R.id.choice4:
+    			state.choice_selected = 3;
+    			break;
+    			
+    		case R.id.submit:
+    			try 
+    			{
+    				if (state.already_played==0)
+    				{
+    					state.photos_shown += 1;
+    					state.already_played = 1;
+    					if (state.current_challenge.getInt("correct_option")==state.choice_selected)
+    					{
+    						state.correctly_answered += 1;
+    						//state.play_log += state.current_challenge.getInt("photo_id") + ":1;";
+    						state.played_challenges.add(state.current_challenge.getInt("photo_id") + ":1;");
+    					}
+    					else
+    					{
+    						//state.play_log += state.current_challenge.getInt("photo_id") + ":0;";
+    						state.played_challenges.add(state.current_challenge.getInt("photo_id") + ":0;");
+    					}
+    					//state.len_play_log += 1;
+    					//if(state.is_logged_in==1 && state.len_play_log>=10)
+    						//sync_score(1);
+    					set_userinfo();
+    				}
+    				else
+    				{
+    					mycontext.deleteFile(state.current_challenge.getString("photo_id")+".dat");
+    					state.current_challenge = null;
+    					if (loadNewChallenge()==0)
+    					{
+    			        	if(download_status==0 && !download_error_message.equals(""))
+    			        	{
+    			        		set_message("Error!");
+    			        		show_alert(download_error_message);
+    			        	}
+    			        	else
+    			        		set_message("Unable to contact the server.");
+    				        ImageView imView = (ImageView)findViewById(R.id.challenge_image);
+    				        imView.setImageResource(R.drawable.picguess);
+    				        submit_button.setVisibility(4);
+    					}
+    				}
+    			} 
+    			catch (JSONException e)
+    			{
+    				e.printStackTrace();
+    			}    		    			
+    			break;
+    			
+    		case R.id.broken_image:
+            	AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            	builder.setMessage("Are you sure?");
+            	builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+            	{
+     	           public void onClick(DialogInterface dialog, int id) 
+     	           {
+     	        	   try
+     	        	   {
+     	        		  int photo_id = state.current_challenge.getInt("photo_id");
+     	        		  report404(photo_id);
+     	        		  mycontext.deleteFile(state.current_challenge.getString("photo_id")+".dat");
+     	        	   }
+     	    		   catch (JSONException e)
+     	    		   {
+     	    			   e.printStackTrace();
+     	    		   }    		    			     	        	   
+     	        	   state.current_challenge = null;
+     	        	   if (loadNewChallenge()==0)
+     	        	   {
+     	        		   if(download_status==0 && !download_error_message.equals(""))
+     	        		   {
+     	        			   set_message("Error!");
+     	        			   show_alert(download_error_message);
+     	        		   }
+     	        		   else
+     	        			   set_message("Unable to contact the server.");
+     	        		   ImageView imView = (ImageView)findViewById(R.id.challenge_image);
+     	        		   imView.setImageResource(R.drawable.picguess);
+     	        		   submit_button.setVisibility(4);
+     	        	   }
+     	        	   set_buttons();
+     	           }
+            	});
+     	        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+     	  	           public void onClick(DialogInterface dialog, int id) {
+     	 	                dialog.cancel();
+     	 	           }
+     	 	        });
+     	        AlertDialog alert = builder.create();
+     	        alert.show();
+    			break;	
+    	}
+    	
+    	set_buttons();
+    }
+    
+    
+    public boolean onOptionsItemSelected(MenuItem item) 
+    {
+        switch (item.getItemId()) 
+        {
+        case R.id.menu_login:
+    		Intent intent = new Intent(mycontext, picguess.android.Authentication.class);
+    		startActivityForResult(intent, 1);  
+    		return true;
+        case R.id.menu_logout:
+   			state.score = 0;
+			state.is_logged_in = 0;
+			state.stored_username = "";
+			state.stored_password = "";
+    		set_userinfo();
+    		return true;
+        case R.id.menu_signup:
+    		Intent intent2 = new Intent(mycontext, picguess.android.Signup.class);
+    		startActivityForResult(intent2, 2);  
+    		return true;
+        case R.id.menu_about:
+        	show_alert(getString(R.string.about));
+        	return true;
+        case R.id.menu_feedback:
+        	Intent intent3 = new Intent(mycontext, picguess.android.Feedback.class);
+        	intent3.putExtra("is_logged_in", state.is_logged_in);
+        	intent3.putExtra("username", state.stored_username);
+        	intent3.putExtra("password", state.stored_password);
+    		startActivityForResult(intent3, 3);  
+        	return true;
+        case R.id.menu_rankings:
+    		Intent intent4 = new Intent(mycontext, picguess.android.Statistics.class);
+           	intent4.putExtra("is_logged_in", state.is_logged_in);
+        	intent4.putExtra("username", state.stored_username);
+        	intent4.putExtra("password", state.stored_password);
+    		startActivityForResult(intent4, 4);  
+    		return true;
+        case R.id.menu_settings:
+    		Intent intent5 = new Intent(mycontext, picguess.android.Settings.class);
+           	intent5.putExtra("is_logged_in", state.is_logged_in);
+        	intent5.putExtra("username", state.stored_username);
+        	intent5.putExtra("password", state.stored_password);
+    		startActivityForResult(intent5, 5);  
+        	return true;
+        case R.id.menu_exit:
+        	finish();
+        	return true;
+        }
+        return false;
+    }
+
+    
+    public int loadChallenge(JSONObject challenge)
+    {
+		try {
+			//Log.v("MyMessage", "reading file: "+challenge.getString("photo_id")+".dat");
+			InputStream fis = mycontext.openFileInput(challenge.getString("photo_id")+".dat");
+	        Bitmap bitmap = BitmapFactory.decodeStream(fis);
+	        fis.close();
+            ImageView imView = (ImageView)findViewById(R.id.challenge_image);
+            imView.setImageBitmap(bitmap);
+            
+          	set_message("Photo by '" + challenge.getString("photo_owner") + "' on " + challenge.getString("photo_site"));
+        	//Log.v("MyMessage", "challenge loaded!");
+        	
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+			return 0;
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+			return 0;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return 0;
+		}
+        return 1;
+    }
+    
+    public int loadNewChallenge()
+    {   
+    	//Log.v("MyMessage", "load new challenge called");
+    	long wait = 0;
+    	long max_wait = 10000;
+    	if((!downloadThread.isAlive()) && download_status==1)
+    	{
+    		Log.v("MyMessages", "Thread state"+downloadThread.getState().name());
+    		downloadThread.start();
+    	}
+    	while (state.stored_challenges.isEmpty() && downloadThread.isAlive() && wait<max_wait)
+    	{
+    		//Log.v("MyMessage", "waiting for the download thread");
+    		try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				return 0;
+			}
+    		wait += 1000;
+    	}
+
+        int loaded = 0;
+        while (loaded==0 && !state.stored_challenges.isEmpty())
+        {
+        	//Log.v("MyMessage", "trying to load challenge");
+        	state.current_challenge = (JSONObject) state.stored_challenges.remove(0);
+        	state.already_played = 0;
+        	state.choice_selected = -1;
+        	loaded = loadChallenge(state.current_challenge);
+        }
+        if (loaded==0)
+        {
+        	//Log.v("MyMessage", "could not load any challenge");
+        	return 0;
+        }
+        return 1;
+    }
+    
+    
+    public int sync_score(int update_view)
+    {
+    	if(sync_in_progress)
+    		return 1;
+    	sync_in_progress = true;
+    	if(sync_nfailures>=3)
+    	{
+    		sync_in_progress = false;
+    		return 1;
+    	}
+    	
+    	//Log.v("MyMessages", "sync_score before: update_view="+update_view+"play_log="+state.play_log+", size(played_challenges)="+state.played_challenges.size());
+    	while(!state.played_challenges.isEmpty())
+    	{
+    		state.play_log += state.played_challenges.remove(0);
+    		state.len_play_log += 1;
+    	}
+    	//Log.v("MyMessages", "sync_score after : update_view="+update_view+"play_log="+state.play_log+", size(played_challenges)="+state.played_challenges.size());
+    	
+    	if(state.len_play_log==0)
+    	{
+    		if (update_view==1)
+    			set_userinfo();
+    		sync_in_progress = false;
+    		return 1;
+    	}
+    	
+        HttpClient httpclient = new DefaultHttpClient();  
+        HttpPost httppost = new HttpPost(getString(R.string.url_base)+getString(R.string.url_update));  
+        try 
+        {  
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(3);
+            nameValuePairs.add(new BasicNameValuePair("username", state.stored_username));  
+            nameValuePairs.add(new BasicNameValuePair("password", state.stored_password));
+            nameValuePairs.add(new BasicNameValuePair("corrections",state.play_log));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));  
+            HttpResponse response = httpclient.execute(httppost);
+            HttpEntity entity = response.getEntity();
+            InputStream inputStream = entity.getContent();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line="", result="";
+            while ((line = reader.readLine()) != null) {
+            	result += line + '\n';
+            }
+            //Log.v("MyMessage", "server response="+result+'\n');
+            JSONObject json = new JSONObject(result);
+            int success = json.getInt("updated");
+            if (success==1)
+            {
+            	state.score = json.getInt("score");
+        		state.play_log = "";
+        		state.len_play_log = 0;
+        		if (update_view==1)
+        			set_userinfo();
+            }
+            else
+            {
+            	sync_nfailures += 1;
+            }
+        } 
+        catch (ClientProtocolException e) {  
+            e.printStackTrace();
+        	sync_nfailures += 1;
+    		sync_in_progress = false;
+            return 0;
+        } catch (IOException e) {  
+            e.printStackTrace();
+        	sync_nfailures += 1;
+    		sync_in_progress = false;
+            return 0;
+        } catch (JSONException e) {
+			e.printStackTrace();
+        	sync_nfailures += 1;
+    		sync_in_progress = false;
+			return 0;
+		}  
+        
+		sync_in_progress = false;
+        return 1;
+    }
+    
+    public int report404(int photo_id)
+    {
+        HttpClient httpclient = new DefaultHttpClient();  
+        HttpPost httppost = new HttpPost(getString(R.string.url_base)+getString(R.string.url_report404));  
+        try 
+        {  
+            List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(3);
+            nameValuePairs.add(new BasicNameValuePair("username", state.stored_username));  
+            nameValuePairs.add(new BasicNameValuePair("password", state.stored_password));
+            nameValuePairs.add(new BasicNameValuePair("photo_id", ""+photo_id));
+            httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));  
+            HttpResponse response = httpclient.execute(httppost);
+            HttpEntity entity = response.getEntity();
+            InputStream inputStream = entity.getContent();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line="", result="";
+            while ((line = reader.readLine()) != null) {
+            	result += line + '\n';
+            }
+            //Log.v("MyMessage", "server response="+result+'\n');
+            JSONObject json = new JSONObject(result);
+            int success = json.getInt("success");
+            String msg = json.getString("message");
+            if (msg.equals(""))
+            {
+            	if (success==1)
+            		msg = "Thanks for your report!";
+            	else
+            		msg = "Sorry, failed to submit your report.";
+            }
+        	show_alert(msg);
+        } 
+        catch (ClientProtocolException e) {  
+            e.printStackTrace();
+            return 0;
+        } catch (IOException e) {  
+            e.printStackTrace();
+            return 0;
+        } catch (JSONException e) {
+			e.printStackTrace();
+			return 0;
+		}  
+        
+        return 1;
+    	
+    }
+    
+    private OnClickListener buttonListener = new OnClickListener() {
+        public void onClick(View v)
+        {
+        	if (v.getId()==R.id.login)
+        	{
+        		if (state.is_logged_in==1)
+        		{
+        			state.score = 0;
+        			state.is_logged_in = 0;
+        			state.stored_username = "";
+        			state.stored_password = "";
+            		set_userinfo();
+        		}
+        		else
+        		{
+            		Intent intent = new Intent(mycontext, picguess.android.Authentication.class);
+            		startActivityForResult(intent, 1);        			
+        		}
+        	}
+        	else if(v.getId()==R.id.score_sync)
+        	{
+        		if (state.is_logged_in==1)
+        		{
+        			if (sync_score(1)==0)
+        			{
+        				set_message("Unable to contact the server");
+        			}
+        		}
+        	}
+        	else if (v.getId()==R.id.exit)
+        	{
+        		finish();
+        	}
+        }
+    };
+    
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+    	if (requestCode==1 || requestCode==2) //authentication or signup
+    	{
+    		if (resultCode==RESULT_OK)
+    		{
+    			state.stored_username = data.getStringExtra("username");
+    			state.stored_password = data.getStringExtra("password");
+    			state.score = data.getIntExtra("score", 0);
+    			state.is_logged_in = 1;
+    			set_userinfo();
+    		}
+    	}
+    	else if(requestCode==3) //feedback
+    	{
+       		if (resultCode==RESULT_OK)
+    		{
+       			show_alert("Thanks for your feedback.");
+    		}
+    	}
+    	else if(requestCode==4) //Statistics
+    	{
+    		
+    	}
+       	else if(requestCode==5) //Settings
+    	{
+    		if (resultCode==RESULT_OK)
+    		{
+    			state.stored_username = data.getStringExtra("username");
+    			state.stored_password = data.getStringExtra("password");
+    			if(state.stored_username.equals(""))
+    			{
+    				state.score = 0;
+    				state.is_logged_in = 0;
+    				set_userinfo();
+    				show_alert("Account Deleted!");
+    			}
+    			else
+    			{
+    				set_userinfo();
+    				show_alert("Password Changed Successfully");
+    			}
+    		}	
+    	}
+    }
+}

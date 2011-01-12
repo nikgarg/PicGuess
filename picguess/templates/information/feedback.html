@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Feedback</h3>
+
+<form action="." method="post">
+  <table>
+    <tr>
+      <td>Your comments:</td>
+      <td>{{ form.comment }}</td>
+      <td><font color="red">{{ form.comment.errors }}</font></td>
+    </tr>
+    <tr>
+      <td>Email (if you would like a response):</td>
+      <td>{{ form.email }}</td>
+      <td><font color="red">{{ form.email.errors }}</font></td>
+    </tr>
+    <tr>
+      <td>Human Verification:</td>
+      <td>{{ form.captcha }}</td>
+      <td><font color="red">{{ form.captcha.errors }}</font></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><input type="submit" value="Submit" /></td>
+      <td></td>
+    </tr>
+  </table>
+</form>
+
+<br><br>
+
+You may also email your feedback to us at feedback@picguess.com
+{% endblock %}

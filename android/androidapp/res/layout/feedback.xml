@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#556b2f">
+
+	<TextView
+	    android:id="@+id/feedback_title"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="Feedback"/>
+	    
+	<TextView
+	    android:id="@+id/feedback_message"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_gravity="center_horizontal"
+	    android:background="#cd853f"
+	    android:text=""/>
+
+	<TextView
+	    android:id="@+id/feedback_label_content"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="Please write your feedback here"/>
+	    
+	<EditText
+	    android:id="@+id/feedback_content"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="top"
+	    android:scrollbars="vertical"
+	    android:lines="4"/>
+	    
+	<TextView
+	    android:id="@+id/feedback_label_email"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="Email (if you would like a response)"/>
+	    
+	<EditText
+	    android:id="@+id/feedback_email"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:gravity="top"
+	    android:lines="1"/>
+	    	    	    
+	<TableLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:stretchColumns="*">
+	    <TableRow>
+            <Button
+            android:id="@+id/feedback_submit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Submit"/>    
+            <Button
+                android:id="@+id/feedback_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel"/> 
+        </TableRow>
+    </TableLayout>
+    
+    <TextView
+	    android:id="@+id/feedback_notice"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="You may also email your feedback at feedback@picguess.com"/>
+               
+</LinearLayout>

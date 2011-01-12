@@ -1,0 +1,22 @@
+<div id="header" class="header">
+  
+  <div id="header-left" style="float:left">
+    <a href="/"><img src="/site_media/img/picguess.png"></a> 
+    &nbsp
+    <a href="/">Home</a>
+  </div>
+  
+  <div id="header-right" style="float:right">
+    {% if user.is_authenticated %}
+    {{ user.username }} | 
+    <a href="/users/myprofile/">My Profile</a> | 
+    <a href="/users/logout/">Logout</a>
+    {% else %}
+    Welcome Guest! | 
+    <a href="/users/login/">Login</a> | 
+    <a href="/users/register/">Register</a>
+    {% endif %}
+  </div>
+
+  <div style="clear:both"></div>
+</div>

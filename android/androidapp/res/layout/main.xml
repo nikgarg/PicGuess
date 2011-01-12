@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:background="#00000000">
+    
+    <RelativeLayout
+        android:id="@+id/top_panel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true">
+
+        <TextView
+            android:id="@+id/score_overall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true"
+            android:text="Overall Score: Requires Login"/>
+        <ImageButton
+             android:id="@+id/score_sync"
+             android:layout_width="20dip"
+             android:layout_height="20dip"
+             android:layout_toRightOf="@id/score_overall"    
+             android:layout_alignParentTop="true"
+             android:paddingLeft="5dip"
+             android:scaleType="centerInside"
+             android:background="#00000000"
+             android:visibility="invisible"
+             android:src="@drawable/refresh"/>
+        <TextView
+            android:id="@+id/score_session"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@id/score_overall"
+            android:text="This Session: 0/0"/>	
+        
+        <ImageButton
+            android:id="@+id/login"
+            android:layout_width="50dip"
+            android:layout_height="30dip"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:scaleType="centerInside"
+            android:background="#00000000"
+            android:src="@drawable/login"/>   
+        <TextView
+            android:id="@+id/username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_toLeftOf="@id/login"
+            android:paddingTop="5dip"
+            android:paddingRight="10dip"
+            android:lines="1"
+            android:text=""/>
+    </RelativeLayout>
+    
+    <RelativeLayout
+        android:id="@+id/bottom_panel"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+        <ImageButton
+             android:id="@+id/exit"
+             android:layout_width="30dip"
+             android:layout_height="30dip"
+             android:layout_alignParentBottom="true"    
+             android:layout_alignParentRight="true"
+             android:scaleType="centerInside"
+             android:background="#00000000"
+             android:src="@drawable/exit"/>
+             
+        <Button
+            android:id="@+id/broken_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:background="#aa000000"
+            android:textColor="#ffff0000"
+            android:text="Report Broken Image" />
+    </RelativeLayout>    
+
+    <RelativeLayout
+        android:id="@+id/middle_panel"
+        android:layout_width="fill_parent"
+        android:layout_height="350dip"
+        android:layout_below="@id/top_panel"
+        android:paddingTop="10dip">
+
+        <TextView
+         android:id="@+id/copyright"
+         android:layout_width="fill_parent"
+         android:layout_height="wrap_content"
+         android:layout_alignParentTop="true"
+         android:gravity="center_horizontal"
+         android:text=""/>    
+        <ImageView
+            android:id="@+id/challenge_image"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
+            android:layout_below="@id/copyright"
+            android:scaleType="centerInside"
+            android:src="@drawable/picguess"/>
+            
+        <RelativeLayout
+            android:id="@+id/choice_panel"
+            android:layout_width="fill_parent"
+            android:layout_height="80dip"
+            android:layout_alignParentBottom="true"
+            android:background="#aa000000">
+                         
+	        <Button
+	            android:id="@+id/submit"
+	            android:layout_width="60dip"
+	    		android:layout_height="wrap_content"
+	    		android:layout_alignParentBottom="true"
+	    		android:layout_centerHorizontal="true"
+	    		android:layout_marginBottom="10dip"
+	            android:textColor="#ffffffff"
+	            android:text=""
+	            android:textStyle="bold"/>
+	            
+	       	<Button
+	            android:id="@+id/choice3"
+	            android:layout_width="120dip"
+	            android:layout_height="40dip"
+	    		android:layout_alignParentBottom="true"
+	    		android:layout_alignParentLeft="true"
+	    		android:gravity="center"
+	            android:background="#00000000"
+	            android:textColor="#ffffffff"
+	            android:enabled="false"
+	            android:text=""
+	            android:textStyle="bold"/>
+	        <Button
+	            android:id="@+id/choice4"
+	            android:layout_width="120dip"
+	            android:layout_height="40dip"
+	    		android:layout_alignParentBottom="true"
+	    		android:layout_alignParentRight="true"
+	    		android:gravity="center"
+	            android:background="#00000000"
+	            android:textColor="#ffffffff"
+	            android:enabled="false"
+	            android:text=""
+	            android:textStyle="bold"/>        
+	        <Button
+	            android:id="@+id/choice1"
+	            android:layout_width="120dip"
+	            android:layout_height="40dip"
+	    	    android:layout_above="@id/choice3"
+	    		android:layout_alignParentLeft="true"
+	    		android:gravity="center"
+	            android:background="#00000000"
+	            android:textColor="#ffffffff"
+	            android:enabled="false"
+	            android:text=""
+	            android:textStyle="bold"/>
+	        <Button
+	            android:id="@+id/choice2"
+	            android:layout_width="120dip"
+	            android:layout_height="40dip"
+	    		android:layout_above="@id/choice4"
+	    		android:layout_alignParentRight="true"
+	    		android:gravity="center"
+	            android:background="#00000000"
+	            android:textColor="#ffffffff"
+	            android:enabled="false"
+	            android:text=""
+	            android:textStyle="bold"/>    
+        </RelativeLayout>      
+	                
+   </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="text-align:center;">
+
+  <div style="width:80%; float:left">
+    <b>Where was this photo taken?</b>
+    <br>
+    
+    <form method="post" action="/photos/play/">
+      <img src="{{ challenge.photo_url }}">
+      <br>
+      Photo by '{{ challenge.photo_owner }}' on {{ challenge.photo_site }}
+      <br><br>
+      <table style="margin-left:auto; margin-right:auto;">
+	<tr>
+	  <td><input type="radio" name="options" value="{{ challenge.options.0 }}" />{{ challenge.options.0 }}</td>
+	  <td><input type="radio" name="options" value="{{ challenge.options.1 }}" />{{ challenge.options.1 }}</td>
+	</tr>
+	<tr>
+	  <td><input type="radio" name="options" value="{{ challenge.options.2 }}" />{{ challenge.options.2 }}</td>
+	  <td><input type="radio" name="options" value="{{ challenge.options.3 }}" />{{ challenge.options.3 }}</td>
+	</tr>
+      </table>
+      <input type="submit" value="Go" />
+      <input type="hidden" name="photo_id" value="{{ challenge.photo_id }}" />
+    </form>
+  </div>
+
+  <div style="width:20%; float:right">
+    <hr>
+    {% if not user.is_authenticated %}
+    <form method="post" action="/users/login/">
+      <table style="margin-left:auto; margin-right:auto;">
+	<tr><td>{{ loginform.username.label_tag }}</td></tr>
+	<tr><td>{{ loginform.username }}</td></tr>
+	<tr><td>{{ loginform.password.label_tag }}</td></tr>
+	<tr><td>{{ loginform.password }}</tr>
+	<tr><td><input type="submit" value="login" /></td></tr>
+      </table>
+    </form>
+    <hr>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+    <b>Score: {{ score }}</b>
+    {% else %}
+    <b>Score: Requires login</b>
+    {% endif %}
+    <br>
+    This session:{{ session_score }}
+    <br><br>
+    <a href="/users/rankings/">Current Rankings</a>
+    <hr>
+    <form method="post" action="/photos/report404/">
+      <input type="hidden" name="photo_id" value="{{ challenge.photo_id }}" />
+      <input type="submit" value="Report Broken Image" />
+    </form>
+
+    <br><br><br>
+    <hr>
+    <br><br><br>
+    <b>PicGuess Android app</b>
+    <br>
+    Visit Android Market
+    <br>
+    or
+    <br>
+    <a href="/site_media/app/PicGuess-1.1.apk">Download here</a>
+    
+  </div>
+
+  <div style="clear:both"></div>
+
+</div>
+
+
+{% endblock %}

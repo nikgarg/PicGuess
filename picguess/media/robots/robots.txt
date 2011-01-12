@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /photos/challenge/android/
+Disallow: /photos/play/
+Disallow: /photos/update/
+Disallow: /photos/report404/
+Disallow: /users/
+

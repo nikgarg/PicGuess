@@ -1,0 +1,28 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<item android:id="@+id/menu_rankings"
+	      android:title="Rankings"
+	      android:icon="@drawable/statistics" />
+	<item android:id="@+id/menu_settings"
+	      android:title="Settings"
+	      android:icon="@drawable/settings" />
+    <item android:id="@+id/menu_login"
+          android:title="Login"
+          android:icon="@drawable/menu_login" />
+    <item android:id="@+id/menu_signup"
+          android:title="Sign Up"
+          android:icon="@drawable/signup" />
+    <item android:id="@+id/menu_logout"
+          android:title="Logout"
+          android:icon="@drawable/menu_logout" />
+    <item android:id="@+id/menu_about"
+          android:title="About"
+          android:icon="@drawable/picguess_icon" />
+    <item android:id="@+id/menu_feedback"
+          android:title="Feedback"
+          android:icon="@drawable/feedback" />
+    <item android:id="@+id/menu_exit"
+          android:title="Exit"
+          android:icon="@drawable/exit" />
+          
+</menu>

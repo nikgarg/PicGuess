@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#556b2f">
+
+	<TextView
+	    android:id="@+id/settings_title"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:text="Account Settings"/>
+	    
+	<TextView
+	    android:id="@+id/settings_message"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_centerHorizontal="true"
+	    android:layout_below="@id/settings_title"
+	    android:background="#cd853f"
+	    android:text=""/>
+
+    <View
+       android:id="@+id/settings_line1"
+       android:layout_width="fill_parent"
+       android:layout_height="2dip"
+       android:layout_below="@id/settings_message"
+       android:layout_marginTop="2dip"
+       android:layout_marginBottom="2dip"
+       android:background="#ffffff" /> 
+       	    	    
+	<TextView
+	    android:id="@+id/settings_label_change_password"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_below="@id/settings_line1"
+	    android:layout_centerHorizontal="true"
+	    android:textStyle="bold"
+	    android:text="Change password"/>
+	    
+	<TableLayout
+	    android:id="@+id/settings_password_table"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/settings_label_change_password"
+        android:stretchColumns="*">
+	    <TableRow>
+			<TextView
+		  	  	android:id="@+id/settings_label_password1"
+	    		android:layout_width="wrap_content"
+	 	 	  	android:layout_height="wrap_content"
+	   			android:text="New Password"/>
+	   		<TextView
+	    		android:id="@+id/settings_label_password2"
+	    		android:layout_width="wrap_content"
+	    		android:layout_height="wrap_content"	    
+	    		android:text="Confirm New Password"/>
+	    </TableRow>
+	    <TableRow>
+			<EditText
+			    android:id="@+id/settings_password1"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:inputType="textPassword"/>
+			<EditText
+			    android:id="@+id/settings_password2"
+			    android:layout_width="fill_parent"
+			    android:layout_height="wrap_content"
+			    android:inputType="textPassword"/>
+	    </TableRow>
+	</TableLayout>
+	    
+    <Button
+        android:id="@+id/settings_submit"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+	    android:layout_below="@id/settings_password_table"
+        android:text="Submit"/>    
+        
+    <View
+       android:id="@+id/settings_line2"
+       android:layout_width="fill_parent"
+       android:layout_height="2dip"
+       android:layout_below="@id/settings_submit"
+       android:layout_marginTop="2dip"
+       android:layout_marginBottom="2dip"
+       android:background="#ffffff" />
+        
+    <Button
+        android:id="@+id/settings_delete_account"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/settings_line2"
+        android:text="Delete Account"/>   
+		        
+    <Button
+        android:id="@+id/settings_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:text="Back"/> 
+	             
+</RelativeLayout>

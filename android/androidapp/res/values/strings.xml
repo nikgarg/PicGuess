@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PicGuess</string>
+    <string name="url_base">http://picguess.com</string>
+    <string name="url_challenge">/photos/challenge/android/?hits=10</string>
+    <string name="url_update">/photos/update/android/</string>
+    <string name="url_report404">/photos/report404/android/</string>
+    <string name="url_login">/users/login/android/</string>
+    <string name="url_register">/users/register/android/</string>
+    <string name="url_feedback">/feedback/android/</string>
+    <string name="url_rankings">/users/rankings/android/</string>
+    <string name="url_change_password">/users/changepassword/android/</string>
+    <string name="url_delete_account">/users/deleteaccount/android/</string>
+    <string name="about">PicGuess version: 1.1\n\nHow to play:\n1. Click on one of the four cities shown. Your choice will turn blue. You may also change your selection.\n2. Click Go.\n3. The correct answer turns green and the wrong one turns red. \n4. Click Next for the next question.\n\nVisit us at: picguess.com\nContact: contact@picguess.com</string>
+</resources>

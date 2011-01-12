@@ -1,0 +1,57 @@
+a
+{
+    text-decoration: none;
+}
+
+li
+{
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+
+img
+{  
+    border-style: none;
+}
+
+body
+{
+    background-color: #F0F8FF;
+    margin: 0em 5em 0em 5em;
+}
+
+#main-panel
+{
+    background-color: #FFFFFF;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#content-panel
+{
+    padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+#message
+{
+    width:50%;
+    margin-left:auto;
+    margin-right:auto;
+    background-color:#98fb98;
+    text-align:center;
+}
+
+.header
+{
+    background-color: #E6E6FA;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    border-bottom: thin solid #000000;
+}
+
+.footer
+{
+    text-align: center;
+    margin-top: 2em;
+    margin-bottom: 2em;
+}

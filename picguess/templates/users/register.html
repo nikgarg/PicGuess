@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="text-align:center;">
+  Create a <img src="/site_media/img/picguess.png"> account
+  <br>
+
+  {% if form.errors %}
+  <p><font color="red">Error! Please try again.</font></p>
+  {% else %}
+  <p>&nbsp</p>
+  {% endif %}
+
+  <form method="post" action=".">
+    
+    <table style="margin-left:auto; margin-right:auto;">
+      <tr>
+	<td>Desired Username:</td>
+	<td>{{ form.username }}</td>
+	<td><font color="red">{{ form.username.errors }}</font></td>
+      </tr>
+      <tr>
+	<td>Choose a password:</td>
+	<td>{{ form.password1 }}</td>
+	<td><font color="red">{{ form.password1.errors }}</font></td>
+      </tr>
+      <tr>
+	<td>Re-enter password:</td>
+	<td>{{ form.password2 }}</td>
+	<td><font color="red">{{ form.password2.errors }}</font></td>
+      </tr>
+      <tr>
+	<td>Email (optional):</td>
+	<td>{{ form.email }}</td>
+	<td><font color="red">{{ form.email.errors }}</font></td>
+      </tr>
+      <tr>
+	<td>Human Verification:</td>
+	<td>{{ form.captcha }}</td>
+	<td><font color="red">{{ form.captcha.errors }}</font></td>
+      </tr>
+      <tr>
+	<td></td>
+	<td><input type="submit" value="Register" /></td>
+	<td></td>
+    </table>
+    
+  </form>
+  
+  <br>
+  Already registered?
+  <br>
+  <a href="/users/login">Click here to login</a>
+</div>
+
+
+
+{% endblock %}

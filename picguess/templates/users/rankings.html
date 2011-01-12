@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="text-align:center;">
+  <h3>Current Rankings</h3>
+  <table border="1" style="margin-left:auto; margin-right:auto;">
+    <tr><td><b>Rank</b></td><td><b>Username</b></td><td><b>Score</b></td></tr>
+    {% for username,rank,score in rankings %}
+    <tr><td>{{ rank }}</td><td>{{ username }}</td><td align="right">{{ score }}</td></tr>
+    {% endfor %}
+    <tr><td colspan="3" align="center">-----</td></tr>
+    <tr><td colspan="3" align="center"><b>Your Rank</b></td></tr>
+    {% if user.is_authenticated %}
+    <tr><td>{{ user_rank }}</td><td>{{ user.username }}</td><td align="right">{{ user_score }}</td></tr>
+    {% else %}
+    <tr><td colspan="3" align="center">Requires Login!</td></tr>
+    {% endif %}
+  </table>
+  <br><br><br>
+  Please note that only those users are included in the rankings who have logged in during the last 7 days.
+</div>
+
+{% endblock %}

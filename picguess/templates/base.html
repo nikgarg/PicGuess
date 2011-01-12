@@ -1,0 +1,38 @@
+<html>
+
+  <head>
+    <title>{% block title %}PicGuess -- Discover the world around you!{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="/site_media/css/main.css" />
+    <link rel="icon" href="/site_media/img/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="/site_media/img/favicon.ico" type="image/x-icon"> 
+  </head>
+
+
+  <body>
+
+    <div id="main-panel">
+
+      <div id="header">
+	{% include "header.html" %}
+      </div>
+      
+      {% if message %}
+      <div id="message">{{ message }}</div>
+      {% else %}
+      <div id="message-empty">&nbsp</div>
+      {% endif %}
+      <br>
+
+      <div id="content-panel">
+	{% block content %}Welcome to PicGuess!{% endblock %}
+      </div>
+      
+      <div id="footer" class="footer">
+	{% include "footer.html" %}
+      </div>
+
+    </div>
+
+  </body>
+
+</html>

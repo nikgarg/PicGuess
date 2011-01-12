@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div style="text-align:center">
+
+<h3>Profile for {{ user.username }}</h3>
+
+<b>Score: </b>{{ score }}
+
+<form method="post" action=".">
+  <table style="margin-left:auto; margin-right:auto;">
+    <tr><td colspan="3"><hr></td> <td></td> <td></td></tr>
+    {% if passwordchangeform.errors %}
+    <tr><td colspan="3"><font color="red">Error! Please try again.</font></td> <td></td> <td></td></tr>
+    {% endif %}
+    <tr><td><b>Change Password</b></td> <td></td> <td></td></tr>
+    <tr><td>Current password</td> <td>{{ passwordchangeform.old_password }}</td> <td><font color="red">{{ passwordchangeform.old_password.errors }}</font></td></tr>
+    <tr><td>New password</td> <td>{{ passwordchangeform.new_password1 }}</td> <td><font color="red">{{ passwordchangeform.new_password1.errors }}</font></td></tr>
+    <tr><td>Re-enter new password</td> <td>{{ passwordchangeform.new_password2 }}</td> <td><font color="red">{{ passwordchangeform.new_password2.errors }}</font></td></tr>
+    <tr><td><input type="hidden" name="fields" value="password" /></td> <td></td> <td></td></tr>
+    <tr><td></td><td><input type="submit" value="Change Password" /></td> <td></td></tr>
+    <tr><td colspan="3"><hr></td> <td></td> <td></td></tr>
+  </table>
+</form>
+
+<form method="post" action=".">
+  <input type="hidden" name="fields" value="deleteaccount" />
+  <input type="submit" value="Delete My Account" />
+</form>
+
+</div>
+
+{% endblock %}

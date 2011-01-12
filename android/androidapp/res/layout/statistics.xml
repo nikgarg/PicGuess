@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#556b2f">
+
+	<TextView
+	    android:id="@+id/statistics_title"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentTop="true"
+	    android:text="Statistics"/>
+	    
+	<TextView
+	    android:id="@+id/statistics_message"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_centerHorizontal="true"
+	    android:layout_below="@id/statistics_title"
+	    android:background="#cd853f"
+	    android:text=""/>
+	    	    	    
+	<RelativeLayout
+	    android:id="@+id/statistics_content"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/statistics_message">
+    </RelativeLayout>
+    
+    <Button
+        android:id="@+id/statistics_close"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:text="Back"/>    
+    <TextView
+        android:id="@+id/statistics_description"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_above="@id/statistics_close"
+	    android:layout_marginBottom="10dip"
+	    android:text=""/>        
+               
+</RelativeLayout>

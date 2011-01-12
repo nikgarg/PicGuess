@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Frequently Asked Questions</h3>
+
+<ul>
+
+  <li>
+    <b>From where do you get the pictures and their location information?</b>
+    <br>
+    We get the photos from <a href="http://www.flickr.com/">Flickr</a>. A lot of photos have geo-tagging information with them. We use that data to get the location.
+    <br>
+  </li>
+  
+  <li>
+    <b>How am I supposed to guess the location for those photos that don't have any landmarks?</b>
+    <br>
+    We understand that this could be an issue with some photos. Unfortunately, we do not have the capacity right now to manually check every photo if it contains some landmark. We hope that such photos could have some other clues like dresses of the people, room furniture if the photo has been taken indoors, Flickr username of the photo owner, etc.
+    <br>
+  </li>
+  
+  <li>
+    <b>How is the scoring done?</b>
+    <br>
+    The scoring scheme right now is pretty simple. You get +1 for every correct answer.
+    <br>
+  </li>
+
+  <li>
+    <b>How do you make money out of this?</b>
+    <br>
+    We don't. This is purely a fun project.
+    <br>
+  </li>
+  
+</ul>
+
+<hr>
+
+<b>Did not find what you were looking for?</b>
+<br>
+<form method="post" action=".">
+  <table>
+    <tr>
+      <td>Please write your question here:</td>
+      <td>{{ form.question }}</td>
+      <td><font color="red">{{ form.question.errors }}</font></td>
+    </tr>
+    <tr>
+      <td>Email (if you would like a response):</td>
+      <td>{{ form.email }}</td>
+      <td><font color="red">{{ form.email.errors }}</font></td>
+    </tr>
+    <tr>
+      <td>Human Verification:</td>
+      <td>{{ form.captcha }}</td>
+      <td><font color="red">{{ form.captcha.errors }}</font></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><input type="submit" value="Submit" /></td>
+      <td></td>
+    </tr>
+  </table>
+</form>
+
+
+{% endblock %}
